@@ -13,9 +13,3 @@
 # limitations under the License.
 
 """kt-guard-plugin: Message role guard plugin for KohakuTerrarium."""
-
-from .plugins import MessageRoleGuardPlugin
-
-__version__ = "0.1.0"
-__all__ = ["MessageRoleGuardPlugin"]
-
