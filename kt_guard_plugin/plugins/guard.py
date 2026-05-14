@@ -12,6 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""Guard plugin that validates and optionally repairs LLM message role order.
+
+This plugin ensures the outgoing message list contains exactly one `system`
+message at position 0. When enabled, it can merge multiple system messages and
+move them to the first position before the LLM call.
+"""
+
 from typing import Any
 
 from kohakuterrarium.modules.plugin.base import BasePlugin, PluginContext
@@ -21,21 +28,41 @@ logger = get_logger(__name__)
 
 
 class MessageRoleGuardPlugin(BasePlugin):
+    """Enforce a valid `system` role layout before each LLM request."""
+
     name = "message_role_guard"
     priority = 1_000_000
 
     def __init__(self, *, options: dict[str, Any] | None = None) -> None:
+        """Initialize plugin options.
+
+        Args:
+            options: Optional plugin configuration. Supported key:
+                - fix: Whether to auto-fix invalid message role placement.
+        """
         super().__init__()
         opts = options or {}
         self.fix = bool(opts.get("fix", True))
         self.agent_name = ""
 
     async def on_load(self, context: PluginContext) -> None:
+        """Capture runtime context metadata when the plugin is loaded."""
         self.agent_name = context.agent_name
 
     async def pre_llm_call(
         self, messages: list[dict], **kwargs: Any
     ) -> list[dict] | None:
+        """Validate system-message placement and optionally repair it.
+
+        Args:
+            messages: Outgoing chat messages passed to the provider.
+            **kwargs: Extra runtime metadata from the framework.
+
+        Returns:
+            None when no mutation is required or auto-fix is disabled.
+            A rewritten message list when invalid placement is detected and
+            auto-fix is enabled.
+        """
         system_positions = [
             i for i, msg in enumerate(messages) if msg.get("role") == "system"
         ]
