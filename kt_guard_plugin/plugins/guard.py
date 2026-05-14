@@ -79,8 +79,8 @@ class MessageRoleGuardPlugin(BasePlugin):
         self.agent_name = context.agent_name
 
     async def pre_llm_call(
-        self, messages: list[dict], **kwargs: Any
-    ) -> list[dict] | None:
+        self, messages: list[dict[str, str]], **kwargs: Any
+    ) -> list[dict[str, str]] | None:
         """Validate system-message placement and optionally repair it.
 
         Args:
@@ -105,13 +105,15 @@ class MessageRoleGuardPlugin(BasePlugin):
 
         roles = [msg.get("role") for msg in messages]
         logger.warning(
-            "pre_llm_call message role guard detected invalid system placement",
-            agent=self.agent_name,
-            model=kwargs.get("model", ""),
-            system_positions=system_positions,
-            system_count=len(system_positions),
-            roles=roles[:40],
-            message_count=len(messages),
+            ("pre_llm_call message role guard detected invalid system placement, "
+             "agent=%s, model=%s, system_positions=%s, "
+             "system_count=%s, roles=%s, message_count=%s"),
+            self.agent_name,
+            kwargs.get("model", ""),
+            system_positions,
+            len(system_positions),
+            roles[:40],
+            len(messages),
         )
 
         if not self.fix:
