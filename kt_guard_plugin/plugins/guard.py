@@ -39,7 +39,17 @@ class MessageRoleGuardPlugin(BasePlugin):
         system_positions = [
             i for i, msg in enumerate(messages) if msg.get("role") == "system"
         ]
-        if system_positions == [0] or not system_positions:
+        
+        # 检查是否需要修复：
+        # 1. system 不在位置 0，或
+        # 2. 没有 system 消息，或
+        # 3. 有多个 system 消息
+        needs_fix = (
+            system_positions != [0]  # system 不在第一位或不存在
+            or len(system_positions) > 1  # 多个 system 消息
+        )
+        
+        if not needs_fix:
             return None
 
         roles = [msg.get("role") for msg in messages]
@@ -48,6 +58,7 @@ class MessageRoleGuardPlugin(BasePlugin):
             agent=self.agent_name,
             model=kwargs.get("model", ""),
             system_positions=system_positions,
+            system_count=len(system_positions),
             roles=roles[:40],
             message_count=len(messages),
         )

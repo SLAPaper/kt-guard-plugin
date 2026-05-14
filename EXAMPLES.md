@@ -1,86 +1,174 @@
-"""
-Example: Using kt-guard-plugin in a KohakuTerrarium creature
+# Examples: Using kt-guard-plugin
 
-This shows how to integrate the message_role_guard plugin in your creature config.
-"""
+## Example 1: Minimal setup (use defaults)
 
-# Example 1: Minimal setup (use defaults)
-# ========================================
-# In your creature's config.yaml:
-#
-# plugins:
-#   - name: message_role_guard
-#
-# This enables the plugin with default options:
-#   - fix: true (automatically corrects message ordering)
-#   - priority: 1_000_000 (runs very early in pre_llm_call)
+In your creature's `config.yaml`:
 
+```yaml
+plugins:
+  - name: message_role_guard
+```
 
-# Example 2: With custom options
-# ===============================
-# In your creature's config.yaml:
-#
-# plugins:
-#   - name: message_role_guard
-#     options:
-#       fix: false  # Only log warnings, don't auto-fix
-#
-# This is useful if you want to:
-#   - Monitor for message ordering issues without fixing them
-#   - Debug why your messages are being reordered
+This enables the plugin with default options:
+- `fix: true` — automatically corrects message ordering
+- `priority: 1_000_000` — runs very early in `pre_llm_call`
 
+---
 
-# Example 3: Multiple plugins together
-# =====================================
-# In your creature's config.yaml:
-#
-# plugins:
-#   - name: budget                    # Track token usage
-#   - name: sandbox                   # Restrict filesystem access
-#   - name: message_role_guard        # Ensure system message at position 0
-#     options:
-#       fix: true
-#   - name: compact.auto              # Auto-compact on token overflow
-#
-# Plugins run in the order specified, so message_role_guard runs
-# after budget (tracking) but before compact (which needs clean messages).
+## Example 2: With custom options
 
+```yaml
+plugins:
+  - name: message_role_guard
+    options:
+      fix: false  # Only log warnings, don't auto-fix
+```
 
-# Example 4: Programmatic setup
-# ==============================
+Use this if you want to:
+- Monitor for message ordering issues without fixing them
+- Debug why your messages are being reordered
 
-import asyncio
-from kohakuterrarium.core.agent import Agent
-from kt_guard_plugin.plugins.guard import MessageRoleGuardPlugin
+---
 
+## Example 3: Multiple plugins together
 
-async def example_with_plugin():
-    """Load an agent and use the plugin directly."""
-    
-    # Load your creature
-    agent = Agent.from_path("path/to/your/creature")
-    
-    # The plugin is loaded automatically from config if specified there.
-    # Or, manually register:
-    plugin = MessageRoleGuardPlugin(options={"fix": True})
-    # (In practice, the PluginManager handles this during agent initialization)
-    
-    await agent.start()
-    await agent.inject_input("Your query here")
-    await agent.stop()
+```yaml
+plugins:
+  - name: budget                    # Track token usage
+  - name: sandbox                   # Restrict filesystem access
+  - name: message_role_guard        # Ensure ONE system message at position 0
+    options:
+      fix: true
+  - name: compact.auto              # Auto-compact on token overflow
+```
 
+---
 
-# Example 5: Monitoring output
-# =============================
-# When the plugin detects invalid message ordering, it logs a warning:
-#
-# [HH:MM:SS] [kohakuterrarium.modules.plugin.manager] [WARNING]
-# pre_llm_call message role guard detected invalid system placement
-#   agent=my-agent
-#   model=gpt-4-turbo
-#   system_positions=[5, 12]  <- System messages are NOT at position 0!
-#   roles=['system', 'user', 'assistant', ..., 'system', ...]
-#   message_count=25
-#
-# If fix=true, the plugin will reorder and the messages will be corrected.
-# If fix=false, the messages stay as-is (but logged for debugging).
+## Example 4: System message not at position 0
+
+**Input:**
+```python
+messages = [
+    {"role": "user", "content": "Hello"},
+    {"role": "system", "content": "You are helpful"},
+    {"role": "assistant", "content": "Hi!"}
+]
+```
+
+**After plugin (fix=true):**
+```python
+messages = [
+    {"role": "system", "content": "You are helpful"},
+    {"role": "user", "content": "Hello"},
+    {"role": "assistant", "content": "Hi!"}
+]
+```
+
+---
+
+## Example 5: Multiple system messages (NEW!)
+
+**Input:**
+```python
+messages = [
+    {"role": "system", "content": "You are helpful"},
+    {"role": "user", "content": "Hello"},
+    {"role": "system", "content": "Always be concise"},
+    {"role": "assistant", "content": "Hi!"}
+]
+```
+
+**After plugin (fix=true):**
+```python
+messages = [
+    {"role": "system", "content": "You are helpful\n\nAlways be concise"},
+    {"role": "user", "content": "Hello"},
+    {"role": "assistant", "content": "Hi!"}
+]
+```
+
+**Key behavior:**
+- ✅ Multiple system messages are merged with `\n\n` separator
+- ✅ Only ONE system message remains
+- ✅ System message is placed at position 0
+
+---
+
+## Example 6: Both issues (system not first + multiple)
+
+**Input:**
+```python
+messages = [
+    {"role": "user", "content": "Hello"},
+    {"role": "system", "content": "First system"},
+    {"role": "system", "content": "Second system"},
+    {"role": "assistant", "content": "Hi!"}
+]
+```
+
+**After plugin (fix=true):**
+```python
+messages = [
+    {"role": "system", "content": "First system\n\nSecond system"},
+    {"role": "user", "content": "Hello"},
+    {"role": "assistant", "content": "Hi!"}
+]
+```
+
+**Result:** Both issues fixed in one pass.
+
+---
+
+## Example 7: Warning-only mode (fix=false)
+
+Same input as Example 5, but with `fix: false`:
+
+```yaml
+plugins:
+  - name: message_role_guard
+    options:
+      fix: false
+```
+
+**Behavior:**
+- ✅ Log warning about invalid system messages
+- ❌ Do NOT modify the conversation
+- Useful for: Debugging without affecting behavior
+
+---
+
+## Detection Logic
+
+The plugin checks **before each LLM call**:
+
+1. Are there multiple system messages?
+2. Is the first system message NOT at position 0?
+
+If either is true → trigger correction (if fix=true)
+
+```
+if (system_message_not_at_position_0) OR (multiple_system_messages):
+    if (fix_enabled):
+        → Merge all system messages + reorder
+    else:
+        → Just log warning
+else:
+    → No changes needed
+```
+
+---
+
+## Log Output Example
+
+When plugin detects issues:
+
+```
+[HH:MM:SS] [plugin.manager] [WARNING]
+pre_llm_call message role guard detected invalid system placement
+  agent=my-creature
+  model=gpt-4-turbo
+  system_positions=[0, 2]       ← Two system messages at positions 0 and 2
+  system_count=2                ← System message count
+  message_count=4
+  roles=['system', 'user', 'system', 'assistant']
+```

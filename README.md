@@ -4,13 +4,15 @@ A message role guard plugin for KohakuTerrarium that ensures system messages are
 
 ## Overview
 
-The `MessageRoleGuardPlugin` detects and corrects invalid message ordering in OpenAI-compatible API calls. Many LLM APIs require system messages to be the first element in the conversation, but during complex multi-turn interactions with sub-agents and tool execution, system messages can accidentally get placed in the middle of the conversation.
+The `MessageRoleGuardPlugin` detects and corrects invalid message ordering in OpenAI-compatible API calls. Many LLM APIs require system messages to be the first element in the conversation, and there should be only ONE system message. During complex multi-turn interactions with sub-agents and tool execution, system messages can accidentally:
+- Get placed in the middle of the conversation (not at position 0)
+- Be duplicated (multiple system messages present)
 
 This plugin:
-- Detects when system messages are not at position 0
+- Detects when system messages are not at position 0, or when there are multiple system messages
 - Logs warnings with diagnostic information
-- Automatically consolidates and repositions system messages (optional)
-- Prevents API errors like "System message must be first"
+- Automatically consolidates all system messages into ONE and repositions it at the start (optional)
+- Prevents API errors like "System message must be first" and "Multiple system messages"
 
 ## Installation
 
@@ -70,48 +72,57 @@ agent = Agent.from_path("path/to/creature")
 
 ### Detection
 The plugin runs in the `pre_llm_call` hook and checks if:
-1. System messages exist in the conversation
-2. System messages are at position 0 (or no system messages exist)
+1. Multiple system messages exist in the conversation, OR
+2. System messages exist but are not at position 0
 
 ### Logging
-When invalid ordering is detected, the plugin logs a warning with:
+When invalid state is detected, the plugin logs a warning with:
 - Agent name
 - Model being called
 - Position(s) of system messages
+- **Number of system messages** (NEW!)
 - First 40 roles in the message sequence
 - Total message count
 
 ### Auto-Fix (when enabled)
-1. Extracts all system messages and combines them with `\n\n`
-2. Removes all system messages from their original positions
-3. Prepends the combined system message to the conversation
-4. Returns the corrected message list
+1. Extracts ALL system messages (there might be multiple)
+2. Combines them with `\n\n` separator into ONE system message
+3. Removes all system messages from their original positions
+4. Prepends the consolidated system message to the conversation
+5. Returns the corrected message list
+
+**Result:** Guarantees exactly ONE system message at position 0
 
 ## Examples
 
-### Example 1: Auto-fix enabled (default)
+See [EXAMPLES.md](EXAMPLES.md) for detailed scenarios including:
 
-**Input messages:**
-```
+- ✅ System message repositioning (not at position 0)
+- ✅ Multiple system message consolidation (NEW!)
+- ✅ Both issues combined
+- ✅ Warning-only mode for debugging
+- ✅ Performance notes
+
+Quick example:
+
+**Before:** Multiple system messages scattered
+```python
 [
+  {"role": "system", "content": "Instruction 1"},
   {"role": "user", "content": "Hello"},
-  {"role": "system", "content": "You are helpful"},
+  {"role": "system", "content": "Instruction 2"},
   {"role": "assistant", "content": "Hi!"}
 ]
 ```
 
-**Output after plugin:**
-```
+**After plugin:** Single system message at position 0
+```python
 [
-  {"role": "system", "content": "You are helpful"},
+  {"role": "system", "content": "Instruction 1\n\nInstruction 2"},
   {"role": "user", "content": "Hello"},
   {"role": "assistant", "content": "Hi!"}
 ]
 ```
-
-### Example 2: Warning only (fix: false)
-
-The plugin logs the warning but returns `None`, leaving the conversation unmodified.
 
 ## Development
 
