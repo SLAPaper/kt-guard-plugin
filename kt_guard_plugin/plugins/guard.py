@@ -1,11 +1,11 @@
 # Copyright 2026 SLAPaper
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #     https://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -31,19 +31,48 @@ class MessageRoleGuardPlugin(BasePlugin):
     """Enforce a valid `system` role layout before each LLM request."""
 
     name = "message_role_guard"
-    priority = 1_000_000
+    priority = 1_000  # Make this one of the last pre-LLM plugins to run so it can fix any earlier mistakes.
 
-    def __init__(self, *, options: dict[str, Any] | None = None) -> None:
+    @classmethod
+    def option_schema(cls) -> dict[str, dict[str, Any]]:
+        """Return runtime-mutable option metadata for UI introspection."""
+        return {
+            "fix": {
+                "type": "bool",
+                "default": True,
+                "doc": (
+                    "Whether to automatically fix invalid message ordering. "
+                    "If false, only logs warnings."
+                ),
+            }
+        }
+
+    def __init__(
+        self, *, options: dict[str, Any] | None = None, **kwargs: Any
+    ) -> None:
         """Initialize plugin options.
 
         Args:
             options: Optional plugin configuration. Supported key:
                 - fix: Whether to auto-fix invalid message role placement.
+            **kwargs: Flattened options passed by the package loader.
         """
         super().__init__()
-        opts = options or {}
-        self.fix = bool(opts.get("fix", True))
+        if options is not None and not isinstance(options, dict):
+            raise TypeError("options must be a mapping")
+
+        self.options = {"fix": True}
+        merged_options = dict(options or {})
+        merged_options.update(kwargs)
+        if merged_options:
+            self.set_options(merged_options)
+        else:
+            self.refresh_options()
         self.agent_name = ""
+
+    def refresh_options(self) -> None:
+        """Apply validated option values to derived runtime fields."""
+        self.fix = bool(self.options.get("fix", True))
 
     async def on_load(self, context: PluginContext) -> None:
         """Capture runtime context metadata when the plugin is loaded."""
@@ -66,16 +95,11 @@ class MessageRoleGuardPlugin(BasePlugin):
         system_positions = [
             i for i, msg in enumerate(messages) if msg.get("role") == "system"
         ]
-        
-        # 检查是否需要修复：
-        # 1. system 不在位置 0，或
-        # 2. 没有 system 消息，或
-        # 3. 有多个 system 消息
-        needs_fix = (
-            system_positions != [0]  # system 不在第一位或不存在
-            or len(system_positions) > 1  # 多个 system 消息
-        )
-        
+
+        # Repair when no system message exists, system is not first,
+        # or multiple system messages are present.
+        needs_fix = system_positions != [0] or len(system_positions) > 1
+
         if not needs_fix:
             return None
 
