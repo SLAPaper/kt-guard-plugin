@@ -6,8 +6,7 @@ repository: "https://github.com/SLAPaper/kt-guard-plugin"
 
 plugins:
   - name: message_role_guard
-    path: kt_guard_plugin/plugins
-    module: guard
+    module: kt_guard_plugin.plugins.guard
     class: MessageRoleGuardPlugin
     description: "Ensures system messages are placed at position 0 in the LLM conversation. Detects and fixes invalid message ordering that can break OpenAI-compatible API calls."
     options:
