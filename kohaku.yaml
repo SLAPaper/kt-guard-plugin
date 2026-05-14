@@ -1,0 +1,17 @@
+name: kt-guard-plugin
+version: "0.1.0"
+description: "Message role guard plugin for KohakuTerrarium"
+author: "SLAPaper"
+repository: "https://github.com/SLAPaper/kt-guard-plugin"
+
+plugins:
+  - name: message_role_guard
+    path: kt_guard_plugin/plugins
+    module: guard
+    class: MessageRoleGuardPlugin
+    description: "Ensures system messages are placed at position 0 in the LLM conversation. Detects and fixes invalid message ordering that can break OpenAI-compatible API calls."
+    options:
+      - name: fix
+        type: boolean
+        default: true
+        description: "Whether to automatically fix invalid message ordering. If false, only logs warnings."

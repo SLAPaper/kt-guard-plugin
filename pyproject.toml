@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "kt-guard-plugin"
+version = "0.1.0"
+description = "Message role guard plugin for KohakuTerrarium"
+readme = "README.md"
+license = {text = "Apache License 2.0"}
+requires-python = ">=3.10"
+authors = [{name = "SLAPaper"}]
+dependencies = ["kohakuterrarium"]
+
+[project.urls]
+Repository = "https://github.com/SLAPaper/kt-guard-plugin"
+
+[tool.setuptools.packages.find]
+include = ["kt_guard_plugin*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests/unit"]
+asyncio_mode = "auto"
