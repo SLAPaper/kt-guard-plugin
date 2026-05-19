@@ -16,26 +16,23 @@ This plugin:
 
 ## Installation
 
-### From PyPI (when published)
+### Via kt CLI (KohakuTerrarium package manager)
 ```bash
-pip install kt-guard-plugin
+kt install https://github.com/SLAPaper/kt-guard-plugin.git
 ```
 
-### From GitHub (development)
+### From Local Source (development)
 ```bash
-pip install git+https://github.com/SLAPaper/kt-guard-plugin.git
+git clone https://github.com/SLAPaper/kt-guard-plugin.git
+cd kt-guard-plugin
+kt install -e .
 ```
 
-### From Local Source
+### Programatic Use
 ```bash
 git clone https://github.com/SLAPaper/kt-guard-plugin.git
 cd kt-guard-plugin
 pip install -e .
-```
-
-### Via kt CLI (KohakuTerrarium package manager)
-```bash
-kt install https://github.com/SLAPaper/kt-guard-plugin.git
 ```
 
 ## Usage
