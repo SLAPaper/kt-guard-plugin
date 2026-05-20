@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "kt-guard-plugin"
-version = "0.1.0"
+version = "0.2.0"
 description = "Message role guard plugin for KohakuTerrarium"
 readme = "README.md"
 license = {text = "Apache License 2.0"}
@@ -21,3 +21,7 @@ include = ["kt_guard_plugin*"]
 [tool.pytest.ini_options]
 testpaths = ["tests/unit"]
 asyncio_mode = "auto"
+
+[[tool.mypy.overrides]]
+module = ["kohakuterrarium", "kohakuterrarium.*"]
+ignore_missing_imports = true

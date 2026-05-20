@@ -31,7 +31,7 @@ class MessageRoleGuardPlugin(BasePlugin):
     """Enforce a valid `system` role layout before each LLM request."""
 
     name = "message_role_guard"
-    priority = 1_000  # Make this one of the last pre-LLM plugins to run so it can fix any earlier mistakes.
+    priority = 1_000
 
     @classmethod
     def option_schema(cls) -> dict[str, dict[str, Any]]:

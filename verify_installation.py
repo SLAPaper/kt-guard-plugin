@@ -24,9 +24,13 @@ def verify_plugin():
     print("\n2️⃣  Checking plugin class...")
     try:
         from kt_guard_plugin.plugins.guard import MessageRoleGuardPlugin
+        from kt_guard_plugin.plugins.message_context_logger import MessageContextLoggerPlugin
         print(f"   ✅ Plugin class found: {MessageRoleGuardPlugin.__name__}")
         print(f"      - Priority: {MessageRoleGuardPlugin.priority}")
         print(f"      - Plugin name: {MessageRoleGuardPlugin.name}")
+        print(f"   ✅ Plugin class found: {MessageContextLoggerPlugin.__name__}")
+        print(f"      - Priority: {MessageContextLoggerPlugin.priority}")
+        print(f"      - Plugin name: {MessageContextLoggerPlugin.name}")
     except ImportError as e:
         print(f"   ❌ Failed to import plugin: {e}")
         return False
@@ -56,6 +60,17 @@ def verify_plugin():
         
         plugin = MessageRoleGuardPlugin(options={"fix": False})
         print(f"   ✅ Plugin instantiated with fix=false")
+
+        plugin = MessageContextLoggerPlugin(
+            options={
+                "log_on_load": True,
+                "log_pre_llm_call": True,
+                "log_post_llm_call": True,
+                "max_bytes": 1048576,
+                "backup_count": 1,
+            }
+        )
+        print(f"   ✅ Context logger instantiated")
     except Exception as e:
         print(f"   ❌ Failed to instantiate plugin: {e}")
         return False
@@ -94,6 +109,9 @@ def verify_plugin():
     print("       - name: message_role_guard")
     print("         options:")
     print("           fix: true")
+    print("       - name: message_context_logger")
+    print("         options:")
+    print("           log_pre_llm_call: true")
     print("  2. Or install via: kt install <git-url>")
     print("="*50)
     return True

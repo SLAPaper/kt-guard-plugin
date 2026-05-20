@@ -1,8 +1,15 @@
 # kt-guard-plugin
 
-A message role guard plugin for KohakuTerrarium that ensures system messages are correctly positioned in LLM conversations.
+Debugging and guard plugins for KohakuTerrarium LLM conversations.
 
 ## Overview
+
+This package provides two plugins:
+
+- `message_role_guard`: detects and optionally repairs invalid `system` message ordering.
+- `message_context_logger`: writes full LLM message context to rotating JSONL logs for debugging.
+
+### Message Role Guard
 
 The `MessageRoleGuardPlugin` detects and corrects invalid message ordering in OpenAI-compatible API calls. Many LLM APIs require system messages to be the first element in the conversation, and there should be only ONE system message. During complex multi-turn interactions with sub-agents and tool execution, system messages can accidentally:
 - Get placed in the middle of the conversation (not at position 0)
@@ -13,6 +20,18 @@ This plugin:
 - Logs warnings with diagnostic information
 - Automatically consolidates all system messages into ONE and repositions it at the start (optional)
 - Prevents API errors like "System message must be first" and "Multiple system messages"
+
+### Message Context Logger
+
+The `MessageContextLoggerPlugin` records complete runtime LLM context as structured JSONL. It is intended for debugging agent behavior, such as confirming whether:
+
+- System prompts were assembled as expected
+- Context files were loaded into the final message list
+- Skills or other prompt contributions appear in the outgoing context
+- Native tools passed to the provider match expectations
+- LLM responses and usage were associated with the expected request
+
+The logger is observation-only. It does not rewrite messages, responses, tools, or control flow.
 
 ## Installation
 
@@ -48,11 +67,25 @@ plugins:
       fix: true        # Whether to auto-fix message ordering (default: true)
 ```
 
+Debug full LLM context:
+
+```yaml
+plugins:
+  - name: message_context_logger
+    options:
+      log_on_load: true          # Record plugin load context (default: true)
+      log_pre_llm_call: true     # Record full messages/tools before LLM calls (default: true)
+      log_post_llm_call: true    # Record full response/usage after LLM calls (default: true)
+      max_bytes: 10485760        # Rotate after 10 MiB (default)
+      backup_count: 5            # Keep 5 rotated backups (default)
+```
+
 ### Programmatic Usage
 
 ```python
 from kohakuterrarium.core.agent import Agent
 from kt_guard_plugin.plugins.guard import MessageRoleGuardPlugin
+from kt_guard_plugin.plugins.message_context_logger import MessageContextLoggerPlugin
 
 # Plugin is automatically loaded from config, or manually:
 agent = Agent.from_path("path/to/creature")
@@ -64,6 +97,19 @@ agent = Agent.from_path("path/to/creature")
 - **`fix`** (boolean, default: `true`)
   - If `true`: Automatically consolidates system messages and moves them to position 0
   - If `false`: Only logs warnings, does not modify the conversation
+
+### `message_context_logger`
+
+- **`log_on_load`** (boolean, default: `true`)
+  - If `true`: Writes a `plugin_loaded` event with agent/session/model/working directory and plugin options.
+- **`log_pre_llm_call`** (boolean, default: `true`)
+  - If `true`: Writes a `pre_llm_call` event with full `messages`, `tools`, roles, system message positions, model, and hook kwargs.
+- **`log_post_llm_call`** (boolean, default: `true`)
+  - If `true`: Writes a `post_llm_call` event with full response, usage, messages, roles, system message positions, model, and hook kwargs.
+- **`max_bytes`** (integer, default: `10485760`)
+  - Maximum JSONL file size before rotation.
+- **`backup_count`** (integer, default: `5`)
+  - Number of rotated JSONL backups to retain.
 
 ## Behavior
 
@@ -80,6 +126,22 @@ When invalid state is detected, the plugin logs a warning with:
 - **Number of system messages** (NEW!)
 - First 40 roles in the message sequence
 - Total message count
+
+### Debug Context Logs
+
+`message_context_logger` writes JSONL files into the same user log directory used by KohakuTerrarium logging: `config_dir() / "logs"` via `kohakuterrarium.utils.logging._default_log_dir()`.
+
+Filenames follow the framework's timestamp, pid, and working-directory hash style from `_make_log_filename()`, then add a short session hash when `session_id` is available, with a `.message-context.jsonl` suffix:
+
+```text
+YYYY-MM-DD_HHMMSS_pid<N>_<pwdhash>_session<sessionhash>.message-context.jsonl
+```
+
+Each line is one JSON event. The plugin uses `RotatingFileHandler` with `max_bytes` and `backup_count` so debug logs do not grow without bound.
+
+Because this is a full-context debug logger, message content and responses are written in full by default. Use KohakuTerrarium's plugin enable/disable controls to turn the plugin off entirely, or disable individual phases with `log_on_load`, `log_pre_llm_call`, and `log_post_llm_call`.
+
+`priority = 10_000`, so `pre_llm_call` normally runs after most message-mutating plugins and records a late view of the outgoing request. This is a practical ordering choice, not an absolute finalizer; a plugin with a larger priority can still run after it.
 
 ### Auto-Fix (when enabled)
 1. Extracts ALL system messages (there might be multiple)
@@ -160,7 +222,7 @@ Contributions are welcome! Please open an issue or PR on GitHub.
 
 ## Compatibility
 
-- **KohakuTerrarium**: >=0.1.0
+- **KohakuTerrarium**: >=1.4.0
 - **Python**: >=3.10
 - **OpenAI-compatible LLM APIs**: All
 

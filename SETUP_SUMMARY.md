@@ -105,7 +105,7 @@ kt install https://github.com/SLAPaper/kt-guard-plugin.git
 
 ```yaml
 name: kt-guard-plugin              # 包名
-version: "0.1.0"                   # 版本
+version: "0.2.0"                   # 版本
 description: "..."                 # 描述
 author: "SLAPaper"                 # 作者
 repository: "https://..."          # 代码库
