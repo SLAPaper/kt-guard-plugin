@@ -1,5 +1,5 @@
 name: kt-guard-plugin
-version: "0.2.0"
+version: "0.2.1"
 description: "Message role guard plugin for KohakuTerrarium"
 author: "SLAPaper"
 repository: "https://github.com/SLAPaper/kt-guard-plugin"

@@ -64,7 +64,7 @@ class MessageContextLoggerPlugin(BasePlugin):
             "log_post_llm_call": {
                 "type": "bool",
                 "default": True,
-                "doc": "Whether to record full responses and usage after LLM calls.",
+                "doc": "Whether to record responses, usage, and message summaries after LLM calls.",
             },
             "max_bytes": {
                 "type": "int",
@@ -175,7 +175,7 @@ class MessageContextLoggerPlugin(BasePlugin):
                 "system_positions": system_positions,
                 "tools": kwargs.get("tools"),
                 "messages": messages,
-                "kwargs": self._jsonable(kwargs),
+                "kwargs": self._jsonable(self._kwargs_without(kwargs, "tools")),
             },
         )
         return None
@@ -183,7 +183,7 @@ class MessageContextLoggerPlugin(BasePlugin):
     async def post_llm_call(
         self, messages: list[dict], response: str, usage: dict, **kwargs: Any
     ) -> str | None:
-        """Record full assistant response and usage after each LLM request."""
+        """Record assistant response, usage, and message summary after each LLM request."""
         if not self.log_post_llm_call:
             return None
 
@@ -202,7 +202,7 @@ class MessageContextLoggerPlugin(BasePlugin):
                 "message_count": len(messages),
                 "roles": roles,
                 "system_positions": system_positions,
-                "messages": messages,
+                "message_summary": self._message_summary(messages),
                 "response": response,
                 "usage": usage,
                 "kwargs": self._jsonable(kwargs),
@@ -300,3 +300,18 @@ class MessageContextLoggerPlugin(BasePlugin):
         if isinstance(value, Path):
             return str(value)
         return repr(value)
+
+    def _kwargs_without(self, kwargs: dict[str, Any], *keys: str) -> dict[str, Any]:
+        excluded = set(keys)
+        return {key: value for key, value in kwargs.items() if key not in excluded}
+
+    def _message_summary(self, messages: list[dict]) -> list[dict[str, Any]]:
+        return [
+            {
+                "index": index,
+                "role": message.get("role"),
+                "content_type": type(message.get("content")).__name__,
+                "content_length": len(str(message.get("content", ""))),
+            }
+            for index, message in enumerate(messages)
+        ]

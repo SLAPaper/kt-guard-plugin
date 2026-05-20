@@ -123,7 +123,23 @@ def test_message_context_logger_writes_full_pre_and_post_events(tmp_path):
     ]
     assert events[1]["messages"] == messages
     assert events[1]["tools"] == tools
+    assert "tools" not in events[1]["kwargs"]
     assert events[1]["system_positions"] == [0]
     assert events[2]["response"] == "full assistant response"
     assert events[2]["usage"] == {"input_tokens": 10, "output_tokens": 3}
+    assert "messages" not in events[2]
+    assert events[2]["message_summary"] == [
+        {
+            "index": 0,
+            "role": "system",
+            "content_type": "str",
+            "content_length": len("full system prompt"),
+        },
+        {
+            "index": 1,
+            "role": "user",
+            "content_type": "str",
+            "content_length": len("full user text"),
+        },
+    ]
     assert events[1]["call_id"] == events[2]["call_id"]

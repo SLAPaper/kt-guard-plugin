@@ -17,7 +17,7 @@
 from kt_guard_plugin.plugins.guard import MessageRoleGuardPlugin
 from kt_guard_plugin.plugins.message_context_logger import MessageContextLoggerPlugin
 
-__version__ = "0.2.0"
+__version__ = "0.2.1"
 
 __all__ = [
     "MessageContextLoggerPlugin",

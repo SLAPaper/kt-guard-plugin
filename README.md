@@ -75,7 +75,7 @@ plugins:
     options:
       log_on_load: true          # Record plugin load context (default: true)
       log_pre_llm_call: true     # Record full messages/tools before LLM calls (default: true)
-      log_post_llm_call: true    # Record full response/usage after LLM calls (default: true)
+      log_post_llm_call: true    # Record response/usage after LLM calls (default: true)
       max_bytes: 10485760        # Rotate after 10 MiB (default)
       backup_count: 5            # Keep 5 rotated backups (default)
 ```
@@ -105,7 +105,7 @@ agent = Agent.from_path("path/to/creature")
 - **`log_pre_llm_call`** (boolean, default: `true`)
   - If `true`: Writes a `pre_llm_call` event with full `messages`, `tools`, roles, system message positions, model, and hook kwargs.
 - **`log_post_llm_call`** (boolean, default: `true`)
-  - If `true`: Writes a `post_llm_call` event with full response, usage, messages, roles, system message positions, model, and hook kwargs.
+  - If `true`: Writes a `post_llm_call` event with full response, usage, message summary, roles, system message positions, model, and hook kwargs.
 - **`max_bytes`** (integer, default: `10485760`)
   - Maximum JSONL file size before rotation.
 - **`backup_count`** (integer, default: `5`)
@@ -139,7 +139,7 @@ YYYY-MM-DD_HHMMSS_pid<N>_<pwdhash>_session<sessionhash>.message-context.jsonl
 
 Each line is one JSON event. The plugin uses `RotatingFileHandler` with `max_bytes` and `backup_count` so debug logs do not grow without bound.
 
-Because this is a full-context debug logger, message content and responses are written in full by default. Use KohakuTerrarium's plugin enable/disable controls to turn the plugin off entirely, or disable individual phases with `log_on_load`, `log_pre_llm_call`, and `log_post_llm_call`.
+Because this is a full-context debug logger, `pre_llm_call` message content and `post_llm_call` responses are written in full by default. `post_llm_call` stores only a message summary to avoid duplicating the full input already captured by `pre_llm_call`; correlate the two events with `call_id` when the full input is needed. Use KohakuTerrarium's plugin enable/disable controls to turn the plugin off entirely, or disable individual phases with `log_on_load`, `log_pre_llm_call`, and `log_post_llm_call`.
 
 `priority = 10_000`, so `pre_llm_call` normally runs after most message-mutating plugins and records a late view of the outgoing request. This is a practical ordering choice, not an absolute finalizer; a plugin with a larger priority can still run after it.
 
