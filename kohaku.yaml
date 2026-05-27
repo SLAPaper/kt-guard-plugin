@@ -13,3 +13,7 @@ plugins:
     module: kt_guard_plugin.plugins.message_context_logger
     class: MessageContextLoggerPlugin
     description: "Writes full LLM message context, tools, responses, and usage to rotating JSONL logs for runtime debugging."
+  - name: qps_throttle
+    module: kt_guard_plugin.plugins.qps_throttle
+    class: QpsThrottlePlugin
+    description: "Applies process-local per-model QPS throttling before LLM calls to reduce provider HTTP 429 rate-limit errors."

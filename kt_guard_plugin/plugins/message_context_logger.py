@@ -32,11 +32,31 @@ from pathlib import Path
 from typing import Any
 
 from kohakuterrarium.modules.plugin.base import BasePlugin, PluginContext
-from kohakuterrarium.utils.logging import (
-    _default_log_dir,
-    _make_log_filename,
-    get_logger,
-)
+
+try:
+    from kohakuterrarium.utils.logging import (
+        _default_log_dir,
+        _make_log_filename,
+        get_logger,
+    )
+except ImportError:
+    from kohakuterrarium.utils.logging import get_logger
+
+    try:
+        from kohakuterrarium.utils.config_dir import config_dir
+    except ImportError:  # pragma: no cover - compatibility fallback
+
+        def config_dir() -> Path:
+            return Path.home() / ".kohakuterrarium"
+
+    def _default_log_dir() -> Path:
+        return config_dir() / "logs"
+
+    def _make_log_filename() -> str:
+        date_str = _dt.datetime.now().strftime("%Y-%m-%d_%H%M%S")
+        cwd_hash = hashlib.md5(str(Path.cwd()).encode()).hexdigest()[:8]
+        return f"{date_str}_pid{os.getpid()}_{cwd_hash}.log"
+
 
 logger = get_logger(__name__)
 
@@ -80,9 +100,7 @@ class MessageContextLoggerPlugin(BasePlugin):
             },
         }
 
-    def __init__(
-        self, *, options: dict[str, Any] | None = None, **kwargs: Any
-    ) -> None:
+    def __init__(self, *, options: dict[str, Any] | None = None, **kwargs: Any) -> None:
         """Initialize plugin options and the lazy JSONL writer."""
         super().__init__()
         if options is not None and not isinstance(options, dict):
@@ -161,7 +179,8 @@ class MessageContextLoggerPlugin(BasePlugin):
         self._pending_call_ids.append(call_id)
         roles = [message.get("role") for message in messages]
         system_positions = [
-            index for index, message in enumerate(messages)
+            index
+            for index, message in enumerate(messages)
             if message.get("role") == "system"
         ]
 
@@ -190,7 +209,8 @@ class MessageContextLoggerPlugin(BasePlugin):
         call_id = self._pending_call_ids.popleft() if self._pending_call_ids else None
         roles = [message.get("role") for message in messages]
         system_positions = [
-            index for index, message in enumerate(messages)
+            index
+            for index, message in enumerate(messages)
             if message.get("role") == "system"
         ]
 

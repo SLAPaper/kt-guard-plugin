@@ -37,22 +37,25 @@ class PluginContext:
         self.__dict__.update(kwargs)
 
 
+class PluginBlockError(Exception):
+    pass
+
+
 def _install_kohaku_stubs(tmp_path):
     base_mod = types.ModuleType("kohakuterrarium.modules.plugin.base")
     base_mod.BasePlugin = _BasePlugin
+    base_mod.PluginBlockError = PluginBlockError
     base_mod.PluginContext = PluginContext
 
     logging_mod = types.ModuleType("kohakuterrarium.utils.logging")
     logging_mod.get_logger = lambda name: types.SimpleNamespace(
-        warning=lambda *args, **kwargs: None
+        info=lambda *args, **kwargs: None, warning=lambda *args, **kwargs: None
     )
     logging_mod._default_log_dir = lambda: tmp_path
     logging_mod._make_log_filename = lambda: "2026-05-20_110000_pid1_deadbeef.log"
 
     sys.modules["kohakuterrarium"] = types.ModuleType("kohakuterrarium")
-    sys.modules["kohakuterrarium.modules"] = types.ModuleType(
-        "kohakuterrarium.modules"
-    )
+    sys.modules["kohakuterrarium.modules"] = types.ModuleType("kohakuterrarium.modules")
     sys.modules["kohakuterrarium.modules.plugin"] = types.ModuleType(
         "kohakuterrarium.modules.plugin"
     )

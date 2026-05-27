@@ -16,10 +16,12 @@
 
 from kt_guard_plugin.plugins.guard import MessageRoleGuardPlugin
 from kt_guard_plugin.plugins.message_context_logger import MessageContextLoggerPlugin
+from kt_guard_plugin.plugins.qps_throttle import QpsThrottlePlugin
 
 __version__ = "0.2.1"
 
 __all__ = [
     "MessageContextLoggerPlugin",
     "MessageRoleGuardPlugin",
+    "QpsThrottlePlugin",
 ]
