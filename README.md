@@ -252,7 +252,9 @@ pip install -e ".[dev]"
 
 ### Testing
 ```bash
-pytest tests/unit/
+uv run --with pytest pytest
+uv run python tests/verification/verify_enhancements.py
+uv run python tests/verification/verify_installation.py
 ```
 
 ### File Structure
@@ -269,7 +271,8 @@ kt-guard-plugin/
 │       ├── message_context_logger.py # MessageContextLoggerPlugin implementation
 │       └── qps_throttle.py           # QpsThrottlePlugin implementation
 └── tests/
-    └── unit/             # (Future) unit tests
+    ├── unit/             # pytest unit tests
+    └── verification/     # direct-run verification scripts
 ```
 
 ## License

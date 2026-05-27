@@ -12,6 +12,8 @@ from pathlib import Path
 
 import pytest
 
+REPO_ROOT = Path(__file__).resolve().parents[2]
+
 
 class _BasePlugin:
     def __init__(self):
@@ -217,7 +219,7 @@ def test_option_schema_and_nested_validation(monkeypatch):
 def test_manifest_registers_importable_plugin(monkeypatch):
     module, _logger = _install_kohaku_stubs(monkeypatch)
 
-    manifest = Path("kohaku.yaml").read_text(encoding="utf-8")
+    manifest = (REPO_ROOT / "kohaku.yaml").read_text(encoding="utf-8")
     assert "name: qps_throttle" in manifest
     assert "module: kt_guard_plugin.plugins.qps_throttle" in manifest
     assert "class: QpsThrottlePlugin" in manifest

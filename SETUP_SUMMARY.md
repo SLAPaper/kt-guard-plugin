@@ -32,7 +32,7 @@
 | `.gitignore` | Git 忽略规则（Python 标准 + KohakuTerrarium 会话文件） |
 | `CONTRIBUTING.md` | 贡献指南 |
 | `EXAMPLES.md` | 使用示例（5 个常见场景） |
-| `verify_installation.py` | 安装验证脚本（可选） |
+| `tests/verification/verify_installation.py` | 安装验证脚本（可选） |
 
 ---
 
@@ -47,13 +47,15 @@ kt-guard-plugin/
 ├── .gitignore                  # Git 配置
 ├── CONTRIBUTING.md             # 贡献指南
 ├── EXAMPLES.md                 # 使用示例
-├── verify_installation.py      # 验证脚本
 │
-└── kt_guard_plugin/            # ← 主包
-    ├── __init__.py             # 包导出（导出 MessageRoleGuardPlugin）
-    └── plugins/
-        ├── __init__.py         # 子包导出
-        └── guard.py            # 插件实现（原有代码）
+├── kt_guard_plugin/            # ← 主包
+│   ├── __init__.py             # 包导出（导出 MessageRoleGuardPlugin）
+│   └── plugins/
+│       ├── __init__.py         # 子包导出
+│       └── guard.py            # 插件实现（原有代码）
+└── tests/
+    ├── unit/                   # pytest 单元测试
+    └── verification/           # 直接运行的验证脚本
 ```
 
 ---
@@ -70,7 +72,7 @@ pip install -e .
 ### 方式 2: 验证安装
 
 ```bash
-python verify_installation.py
+python tests/verification/verify_installation.py
 ```
 
 ### 方式 3: 在 KohakuTerrarium 中使用
@@ -139,7 +141,7 @@ plugins:                           # 插件列表
    ```bash
    cd kt-guard-plugin
    pip install -e .
-   python verify_installation.py
+   python tests/verification/verify_installation.py
    ```
 
 2. **在现有生物中测试**
@@ -191,7 +193,7 @@ plugins:                           # 插件列表
 
 ## 🎁 下一步建议
 
-1. **可选**：添加单元测试到 `tests/unit/`（当前跳过）
+1. **可选**：继续补充 `tests/unit/` 单元测试
 2. **推荐**：在 GitHub 创建仓库并 Push
 3. **推荐**：在 KohakuTerrarium 社区 Showcase 中宣布
 4. **可选**：发布到 PyPI 供全局使用

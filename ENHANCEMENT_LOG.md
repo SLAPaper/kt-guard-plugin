@@ -64,13 +64,13 @@ message_count=4
 | `kt_guard_plugin/plugins/guard.py` | 增强 `needs_fix` 逻辑，添加 `system_count` 日志字段 |
 | `README.md` | 更新概述、行为和示例说明 |
 | `EXAMPLES.md` | 完全重写为 Markdown 格式，添加多系统消息示例 |
-| `test_enhancements.py` | ✨ 新增测试脚本验证增强逻辑 |
+| `tests/verification/verify_enhancements.py` | ✨ 新增测试脚本验证增强逻辑 |
 
 ### 新增文件
 
 | 文件 | 用途 |
 |------|------|
-| `test_enhancements.py` | 5 个测试用例，验证所有场景 |
+| `tests/verification/verify_enhancements.py` | 5 个测试用例，验证所有场景 |
 
 ---
 
@@ -92,7 +92,7 @@ message_count=4
 
 ```bash
 cd ~/workspace/kt-guard-plugin
-python test_enhancements.py
+python tests/verification/verify_enhancements.py
 ```
 
 ### 测试覆盖
@@ -172,13 +172,13 @@ plugins:
 
 - 📄 [README.md](README.md) — 更新了概述和行为描述
 - 📄 [EXAMPLES.md](EXAMPLES.md) — 添加了多系统消息场景
-- 🧪 [test_enhancements.py](test_enhancements.py) — 新增完整测试套件
+- 🧪 [tests/verification/verify_enhancements.py](tests/verification/verify_enhancements.py) — 新增完整测试套件
 
 ---
 
 ## 🎁 下一步建议
 
-1. ✅ 运行 `test_enhancements.py` 验证逻辑
+1. ✅ 运行 `tests/verification/verify_enhancements.py` 验证逻辑
 2. ✅ 在现有项目中测试新逻辑
 3. ✅ 更新版本号：`0.1.0` → `0.2.1`
 4. ✅ 提交到 git 并推送到 GitHub
