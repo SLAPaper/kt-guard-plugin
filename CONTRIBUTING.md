@@ -7,7 +7,7 @@ Thanks for your interest in contributing! Here's how to get started.
 ```bash
 git clone https://github.com/SLAPaper/kt-guard-plugin.git
 cd kt-guard-plugin
-pip install -e ".[dev]"
+pip install -e .
 ```
 
 ## Making Changes
@@ -16,19 +16,23 @@ pip install -e ".[dev]"
 2. Make your changes in the appropriate files
 3. Ensure code follows the project style
 4. Add tests if applicable (in `tests/unit/`)
-5. Run tests: `pytest tests/unit/ -v`
+5. Run the relevant verification commands
 
 ## Code Style
 
 - Follow PEP 8
 - Use type hints
 - Keep functions focused and well-documented
-- Run `black` and `ruff` before committing
+- Run `ruff` and `black` on changed Python files before committing
 
 ## Testing
 
 ```bash
-pytest tests/unit/ -v
+uv run --with pytest pytest
+uv run ruff check kt_guard_plugin tests
+uv run --with black black --check --target-version py313 tests
+uv run python tests/verification/verify_enhancements.py
+uv run python tests/verification/verify_installation.py
 ```
 
 ## Submitting a PR

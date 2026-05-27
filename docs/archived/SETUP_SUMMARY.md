@@ -1,5 +1,7 @@
 # kt-guard-plugin 整理完成总结
 
+> Archived historical note. This file records an earlier setup checkpoint and is not maintained as current project documentation. Use [README.md](../../README.md), [EXAMPLES.md](../../EXAMPLES.md), and [CONTRIBUTING.md](../../CONTRIBUTING.md) for the current project state.
+
 ## ✅ 完成内容
 
 已将 `kt-guard-plugin` 整理成规范的、能被 `kt install` 安装的 KohakuTerrarium 插件库形式。

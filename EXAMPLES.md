@@ -11,7 +11,7 @@ plugins:
 
 This enables the plugin with default options:
 - `fix: true` — automatically corrects message ordering
-- `priority: 1_000_000` — runs very early in `pre_llm_call`
+- `priority: 1_000` — runs before the throttle/logger plugins in `pre_llm_call`
 
 ---
 
@@ -43,6 +43,10 @@ plugins:
   - name: message_role_guard        # Ensure ONE system message at position 0
     options:
       fix: true
+  - name: message_context_logger    # Capture final outgoing context and response metadata
+    options:
+      log_pre_llm_call: true
+      log_post_llm_call: true
   - name: compact.auto              # Auto-compact on token overflow
 ```
 
@@ -77,7 +81,27 @@ This plugin is preventive backpressure. It waits before the provider call to red
 
 ---
 
-## Example 5: System message not at position 0
+## Example 5: Message context logger
+
+```yaml
+plugins:
+  - name: message_context_logger
+    options:
+      log_on_load: true
+      log_pre_llm_call: true
+      log_post_llm_call: true
+      max_bytes: 10485760
+      backup_count: 5
+```
+
+**Behavior:**
+- Writes structured JSONL events for plugin load, pre-LLM messages/tools, and post-LLM response/usage.
+- Uses rotating log files with the same user log directory convention as KohakuTerrarium.
+- Does not modify messages, responses, tools, or control flow.
+
+---
+
+## Example 6: System message not at position 0
 
 **Input:**
 ```python
@@ -99,7 +123,7 @@ messages = [
 
 ---
 
-## Example 6: Multiple system messages (NEW!)
+## Example 7: Multiple system messages
 
 **Input:**
 ```python
@@ -127,7 +151,7 @@ messages = [
 
 ---
 
-## Example 7: Both issues (system not first + multiple)
+## Example 8: Both issues (system not first + multiple)
 
 **Input:**
 ```python
@@ -152,9 +176,9 @@ messages = [
 
 ---
 
-## Example 8: Warning-only mode (fix=false)
+## Example 9: Warning-only mode (fix=false)
 
-Same input as Example 6, but with `fix: false`:
+Same input as Example 7, but with `fix: false`:
 
 ```yaml
 plugins:

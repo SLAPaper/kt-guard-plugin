@@ -1,5 +1,7 @@
 # 增强日志 - kt-guard-plugin v0.2.1
 
+> Archived historical note. This file records the message-role guard enhancement checkpoint and is not maintained as current project documentation. Use [README.md](../../README.md), [EXAMPLES.md](../../EXAMPLES.md), and [CONTRIBUTING.md](../../CONTRIBUTING.md) for the current project state.
+
 ## 📝 更新内容
 
 ### 增强的核心逻辑

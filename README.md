@@ -61,7 +61,7 @@ cd kt-guard-plugin
 kt install -e .
 ```
 
-### Programatic Use
+### Programmatic Use
 ```bash
 git clone https://github.com/SLAPaper/kt-guard-plugin.git
 cd kt-guard-plugin
@@ -167,7 +167,7 @@ When invalid state is detected, the plugin logs a warning with:
 - Agent name
 - Model being called
 - Position(s) of system messages
-- **Number of system messages** (NEW!)
+- Number of system messages
 - First 40 roles in the message sequence
 - Total message count
 
@@ -214,11 +214,10 @@ This avoids request bursts that can trigger provider HTTP 429 responses, but it 
 
 See [EXAMPLES.md](EXAMPLES.md) for detailed scenarios including:
 
-- ✅ System message repositioning (not at position 0)
-- ✅ Multiple system message consolidation (NEW!)
-- ✅ Both issues combined
-- ✅ Warning-only mode for debugging
-- ✅ Performance notes
+- Message role guard auto-fix and warning-only modes
+- Message context logger JSONL capture
+- QPS throttle per-model backpressure configuration
+- Combined plugin configuration
 
 Quick example:
 
@@ -247,12 +246,14 @@ Quick example:
 ```bash
 git clone https://github.com/SLAPaper/kt-guard-plugin.git
 cd kt-guard-plugin
-pip install -e ".[dev]"
+pip install -e .
 ```
 
 ### Testing
 ```bash
 uv run --with pytest pytest
+uv run ruff check kt_guard_plugin tests
+uv run --with black black --check --target-version py313 tests
 uv run python tests/verification/verify_enhancements.py
 uv run python tests/verification/verify_installation.py
 ```
@@ -264,16 +265,22 @@ kt-guard-plugin/
 ├── pyproject.toml        # Python project metadata
 ├── README.md             # This file
 ├── LICENSE               # Apache License 2.0
+├── CONTRIBUTING.md       # Contribution and verification notes
+├── EXAMPLES.md           # Plugin configuration examples
 ├── kt_guard_plugin/      # Main package
 │   └── plugins/
 │       ├── __init__.py
 │       ├── guard.py                  # MessageRoleGuardPlugin implementation
 │       ├── message_context_logger.py # MessageContextLoggerPlugin implementation
 │       └── qps_throttle.py           # QpsThrottlePlugin implementation
+├── docs/
+│   └── archived/         # Historical setup/change notes, not current guides
 └── tests/
     ├── unit/             # pytest unit tests
     └── verification/     # direct-run verification scripts
 ```
+
+Historical setup and one-off change notes are kept under `docs/archived/`. Use this README, `EXAMPLES.md`, and `CONTRIBUTING.md` as the current project documentation.
 
 ## License
 
@@ -294,7 +301,7 @@ Contributions are welcome! Please open an issue or PR on GitHub.
 ### Plugin not loading
 - Verify `kohaku.yaml` is in the package root
 - Check that the `kt_guard_plugin` package is installed: `pip list | grep kt-guard`
-- Ensure the creature config references `message_role_guard` in plugins
+- Ensure the creature config references one of the registered plugin names: `message_role_guard`, `message_context_logger`, or `qps_throttle`
 
 ### Warnings but no auto-fix
 - Check plugin option: `fix: true` in creature config
